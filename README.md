@@ -1,7 +1,7 @@
 # Data Analyst
 
 ### Skills: Python, SQL, AWS, Tableau, Excel, Power BI, Matplotlib, Seaborn, Data cleaning, Data wrangling
-### PROJECT 1: Data Warehousing
+### [PROJECT 1: Data Warehousing] (https://github.com/nk8410j/nasrakhalif.github.io)
 *  Extracted data by establishing ODBC connection and exporting to Oracle.
 •  Created new tables, populated te tables and cleansed the data.
 •  Designed and created a data mart
