@@ -1,0 +1,47 @@
+1.	The number of sessions filled by type of temp cover by month
+
+select t_c.coverdescription "Type of Cover", COUNT(s.status) "No. of sessions", d.dw_month Month, d.dw_year Year
+from dw_sessionsfact s
+inner join dw_date_dim d on s.dw_date_id=d.dw_date_id
+inner join dw_type_of_temp_cover_dim t_c on t_c.typeofcoverid_surr =s.typeofcoverid_surr where s.status ='Booked'
+GROUP BY t_c.coverdescription, d.dw_month, s.status, d.dw_year
+
+2.The number of temp care worker requests made by council for each week
+
+select l.Localcouncilname, count(s.surr_requestid) "No. of request", d.week_of_year "Week of year" , d.dw_year Year
+from dw_sessionsfact s
+inner join dw_date_dim d on s.dw_date_id=d.dw_date_id
+inner join dw_local_council_dim l on l.surr_localcouncil_id=s.surr_localcouncil_id GROUP BY l.Localcouncilname,s.surr_requestid, d.week_of_year, d.dw_year
+
+3.	The number of temp care worker requests filled by county for each month
+select l.county, count(s.status) "No. of Sessions filled" , d.dw_month Month, d.dw_year Year from dw_sessionsfact s
+inner join dw_date_dim d on s.dw_date_id=d.dw_date_id
+inner join dw_local_council_dim l on l.surr_localcouncil_id=s.surr_localcouncil_id inner join dw_temp_request_dim r on r.surr_requestid=s.surr_requestid
+where status='Booked'
+GROUP BY l.county, d.dw_month, s.status, d.dw_year
+
+4.	The number temp care worker requests filled by council each week
+select l.localcouncilname, count(s.status) "No. of Sessions filled" , d.week_of_year "Week of year", d.dw_year Year
+from dw_sessionsfact s
+inner join dw_date_dim d on s.dw_date_id=d.dw_date_id
+inner join dw_local_council_dim l on l.surr_localcouncil_id=s.surr_localcouncil_id inner join dw_temp_request_dim r on r.surr_requestid=s.surr_requestid
+where status='Booked'
+GROUP BY d.week_of_year, l.localcouncilname, s.status, d.dw_year
+
+5.	The number of temp care worker requests which were cancelled each month
+select count(s.status) "No. of Sessions Cancelled", d.dw_month Month, d.dw_year Year
+from dw_sessionsfact s
+inner join dw_date_dim d on s.dw_date_id=d.dw_date_id
+inner join dw_local_council_dim l on l.surr_localcouncil_id=s.surr_localcouncil_id inner join dw_temp_request_dim r on r.surr_requestid=s.surr_requestid
+where status='Cancelled'
+GROUP BY	d.dw_month, s.status, d.dw_year
+
+6.	Write the SQL to create a materialized view to show: The Average, length of session cover, by month
+
+Create Materialized view Average_session_month Build immediate
+Refresh on demand Enable query rewrite
+As select AVG(cast(s.sessionend as date) - cast(s.sessionstart as date))*24*60 as "Average session(min)", t.dw_month as Month, t.dw_year as Year
+from dw_sessionsfact s
+
+inner join dw_date_dim t on t.dw_date_id = s.dw_date_id group by t.dw_month, t.dw_year
+order by Month;
