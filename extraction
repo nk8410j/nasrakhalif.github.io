@@ -1,0 +1,5 @@
+The data was extracted from Microsoft Access and exported into Oracle. 
+
+•	Created an ODBC connection, by selecting Oracle in Clien64 driver in ODBC data source Administrator
+•	In Microsoft Access, selected Export, ODBC database and then Obiwan on Machine data sources
+•	Once completed a message appeared to say its successfully exported.
