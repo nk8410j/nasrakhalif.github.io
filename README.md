@@ -2,7 +2,7 @@
 
 ### Skills: Python, SQL, AWS, Tableau, Excel, Power BI, Matplotlib, Seaborn, Data cleaning, Data wrangling
 ### PROJECT 1: Data Warehousing
-•  Extracted data by establishing ODBC connection and exporting to Oracle.
+*  Extracted data by establishing ODBC connection and exporting to Oracle.
 •  Created new tables, populated te tables and cleansed the data.
 •  Designed and created a data mart
 •  Ran queries to establish it serves purpose
