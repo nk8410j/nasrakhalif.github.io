@@ -1,0 +1,278 @@
+
+
+Control file 
+LOAD DATA 
+INFILE "G:\AB_NYC_2019.csv"
+into table STG_AIRBNB_NYC
+fields terminated by "," 
+(id, host_id, host_name, neighbourhood_group, neighbourhood, latitude, longitude, room_type, price, minimum_nights, number_of_reviews, last_review, reviews_per_month, calculated_host_listings_count, availability_365)
+
+Creating staging table 
+
+Create table STG_AIRBNB_NYC(
+ID VARCHAR2(400),
+host_id VARCHAR2(400),
+host_name VARCHAR2(400),
+neighbourhood_group VARCHAR2(400),
+neighbourhood VARCHAR2(400),
+latitude VARCHAR2(400),
+longitude VARCHAR2(400),
+room_type VARCHAR2(400),
+price VARCHAR2(400),
+minimum_nights VARCHAR2(400),
+number_of_reviews VARCHAR2(400),
+last_review VARCHAR2(400),
+reviews_per_month VARCHAR2(400),
+calculated_host_listings_count VARCHAR2(400),
+availability_365 VARCHAR2(400));
+
+
+Data cleaning
+
+select * from stg_airbnb_nyc
+ 
+delete from  stg_airbnb_nyc
+where id = 'id'
+ 
+select id 
+from stg_airbnb_nyc
+group by id
+having count(id) >1
+ 
+select id 
+from stg_airbnb_nyc
+where id is null
+ 
+select host_id 
+from stg_airbnb_nyc
+group by host_id
+having count(host_id) >1
+ 
+select host_id 
+from stg_airbnb_nyc
+where host_id is null
+ 
+select host_name 
+from stg_airbnb_nyc
+where host_name is null
+ 
+update stg_airbnb_nyc
+set host_name = 'Unknown'
+where host_name is null
+ insert into host_dim(host_id, host_name) values (0, 'Unknown')
+select distinct(neighbourhood_group)
+from stg_airbnb_nyc
+ 
+select neighbourhood_group 
+from stg_airbnb_nyc
+where not neighbourhood_group = 'Brooklyn' and not neighbourhood_group ='Staten Island' and not  neighbourhood_group ='Bronx' and not neighbourhood_group ='Manhattan'and not neighbourhood_group = 'Queens'
+ 
+update stg_airbnb_nyc
+set neighbourhood_group = 'Unknown'
+where not neighbourhood_group = 'Brooklyn' and not neighbourhood_group ='Staten Island' and not  neighbourhood_group ='Bronx' and not neighbourhood_group ='Manhattan'and not neighbourhood_group = 'Queens'
+ 
+select distinct(neighbourhood)
+from stg_airbnb_nyc
+ 
+select neighbourhood 
+from stg_airbnb_nyc
+where neighbourhood is null
+ select *
+from neighbourhoods_dim 
+where neighbourhood = ('Unknown')
+
+select latitude, longitude
+from stg_airbnb_nyc
+where latitude is null and longitude is null
+ 
+select distinct room_type
+from stg_airbnb_nyc
+ 
+select room_type
+from stg_airbnb_nyc
+where not room_type ='Shared room' and  not room_type ='Entire home/apt' and not room_type = 'Private room'
+ 
+update stg_airbnb_nyc
+set room_type = 'Unknown'
+where not room_type ='Shared room' and  not room_type ='Entire home/apt' and not room_type = 'Private room'
+ 
+select price 
+from stg_airbnb_nyc
+where price is null
+ 
+select minimum_nights 
+from stg_airbnb_nyc
+where minimum_nights is null
+ 
+select number_of_reviews 
+from stg_airbnb_nyc
+where number_of_reviews is null
+ 
+select last_review 
+from stg_airbnb_nyc
+where last_review is null
+ 
+ 
+select reviews_per_month 
+from stg_airbnb_nyc
+where reviews_per_month is null
+ 
+update stg_airbnb_nyc
+set  reviews_per_month = 0
+where  reviews_per_month is null
+ 
+select calculated_host_listings_count  
+from stg_airbnb_nyc
+where calculated_host_listings_count  is null
+ 
+select calculated_host_listings_count  
+from stg_airbnb_nyc
+where calculated_host_listings_count  is null
+ 
+ 
+select availability_365 
+from stg_airbnb_nyc
+where availability_365  is null
+ 
+update stg_airbnb_nyc
+set  availability_365 = 'Unknown'
+where  availability_365 is null
+
+
+create function tests_date(d varchar2) return varchar2
+is
+  v_date date;
+begin
+  select to_date(d,'dd-mm-yyyy') into v_date from dual;
+  return 'Valid';
+  exception when others then return 'Invalid';
+end;
+select last_review, tests_date(last_review)
+from stg_airbnb_nyc
+where tests_date(last_review) = 'Invalid'
+ 
+update  stg_airbnb_nyc
+set last_review = null
+where tests_date(last_review) = 'Invalid'
+
+
+
+
+Creating and loading dimension tables
+
+create table neighbourhood_group_dim(
+neighbourhood_group_id number generated always as identity(start with 1 increment by 1) primary key,
+neighbourhood_group varchar2(400));
+insert into neighbourhood_group_dim( neighbourhood_group) select distinct(neighbourhood_group) from stg_airbnb_nyc
+select * from neighbourhood_group_dim
+ 
+drop table  neighbourhood_group_dim
+ 
+create table neighbourhoods_dim (
+neighbourhood_id number generated always as identity(start with 1 increment by 1) primary key,
+neighbourhood varchar2(400));
+insert into neighbourhoods_dim( neighbourhood) select distinct(neighbourhood) from stg_airbnb_nyc
+select * from neighbourhoods_dim
+drop table neighbourhood_dim
+ 
+create table Host_dim(
+Host_dim_id number generated always as identity(start with 1 increment by 1) primary key,
+host_id number (9),
+host_name varchar2(400));
+insert into host_dim( host_id, host_name) select distinct(host_id), host_name from stg_airbnb_nyc;
+select * from host_dim;
+ 
+  create table Room_type_dim(
+room_type_id number generated always as identity(start with 1 increment by 1) primary key,
+room_type varchar2(255));
+insert into room_type_dim(room_type) select distinct(room_type) from stg_airbnb_nyc;
+select * from room_type_dim;
+
+
+ create table AB_time_dim(
+date_ID number(6),
+last_review date,
+day number(6),
+month varchar2(255),
+year number (6));
+ 
+ 
+create table Airbnb_fact(
+id number(9),
+host_dim_id number(7),
+neighbourhood_group_id number(6),
+neighbourhood_id number (6),
+latitude number (30),
+longitude number (30),
+room_type_id number (4),
+price number (7),
+minimum_nights number(7),
+number_of_reviews number(7),
+date_id number (6),
+reviews_per_month number(9),
+calculated_host_listings number (9),
+availability number (9));
+  Creating foreign keys
+
+alter table airbnb_fact
+add foreign key (host_dim_id) references host_dim (host_dim_id)
+ 
+ 
+alter table airbnb_fact
+add foreign key (neighbourhood_group_id) references neighbourhood_group_dim (neighbourhood_group_id)
+ 
+alter table airbnb_fact
+add foreign key (neighbourhood_id) references neighbourhoods_dim (neighbourhood_id)
+ 
+alter table airbnb_fact
+add foreign key (room_type_id) references room_type_dim (room_type_id)
+
+
+
+
+
+
+
+
+Loading time & fact table
+
+ 
+declare 
+ 
+new_time_id number (6); 
+cursor c_airbnb is  
+ 
+select s.id, h.host_dim_id, n.neighbourhood_group_id, g.neighbourhood_id, s.latitude, s.longitude, r.room_type_id, s.price,  
+ 
+s.minimum_nights, s.number_of_reviews,s.last_review, s.reviews_per_month, s.calculated_host_listings_count, s.availability_365 
+ 
+from stg_airbnb_nyc s 
+ 
+left join  host_dim h on h.host_id = s.host_id 
+ 
+left join neighbourhood_group_dim n on n.neighbourhood_group=s.neighbourhood_group 
+ 
+left join neighbourhoods_dim g on g.neighbourhood = s.neighbourhood 
+ 
+left join room_type_dim r on r.room_type = s.room_type; 
+begin 
+ 
+for c_rec in c_airbnb loop 
+new_time_id := new_seq.nextval(); 
+      insert into ab_time_dim values(  
+        new_time_id,c_rec.last_review,
+        to_char(to_date(c_rec.last_review,'DD/MM/YYYY'),'DD'), 
+    to_char(to_date(c_rec.last_review,'DD/MM/YYYY'),'Month'),  
+    to_char(to_date(c_rec.last_review,'DD/MM/YYYY'),'YYYY'));
+
+    insert into Airbnb_fact values( 
+ 
+c_rec.id, c_rec.host_dim_id, c_rec.neighbourhood_group_id, c_rec.neighbourhood_id, c_rec.latitude, c_rec.longitude, c_rec.room_type_id, c_rec.price, 
+ 
+c_Rec.minimum_nights, c_rec.number_of_Reviews, new_time_id, c_rec.reviews_per_month, c_rec.calculated_host_listings_count, c_rec.availability_365); 
+ 
+end loop; 
+ 
+end;
+
+
