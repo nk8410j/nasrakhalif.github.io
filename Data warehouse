@@ -1,0 +1,113 @@
+Now that we have cleaned the tables, we will create the tables for our data warehouse
+“Every join between dimension tables and fact tables in a data warehouse environment should be based on surrogate keys,
+not natural keys.” Kimball 1998
+
+Each dimension will have a surrogate key as a primary key of the table, except for the time dimension. Surrogate keys will unique to the data warehouse, 
+unlike a natural key that is used in the business and other source systems. It will ensure the primary key is unique and keeps track of slowly changing dimensions effectively.
+
+CREATE TABLE DW_Type_of_temp_cover_dim ( TypeofCoverID_surr	INT primary key, TypeofCoverID	INT,
+CoverDescription	VARCHAR2(30 BYTE)
+);
+
+create sequence typecover_seq;
+ 
+declare
+cursor c_sessions is
+select typeofcoverid, coverdescription from stag_type_of_temp_cover; begin
+for c_rec in c_sessions loop
+insert into DW_Type_of_temp_cover_dim values( typecover_seq.nextval, c_rec.typeofcoverid,c_rec.coverdescription); end loop;
+end;
+
+CREATE TABLE DW_Temp_request_dim ( surr_RequestID	INT Primary key, RequestID		INT,
+LocalCouncil_ID	INT, RequestDate	DATE
+);
+
+create sequence temps_seq; declare
+cursor c_temps is
+select requestid, localcouncil_id, requestdate from stag_temp_request;
+begin
+for c_rec in c_temps loop
+insert into DW_Temp_request_dim values (
+temps_seq.nextval, c_rec.requestid, c_rec.localcouncil_id,c_rec.requestdate
+);
+end loop; 
+end;
+
+surr_TempID INT primary key, TempID	BINARY_DOUBLE,
+Town	INT,
+County	 VARCHAR2(255 BYTE), Postcode VARCHAR2(255 BYTE), Gender	VARCHAR2(255 BYTE), Age		VARCHAR2(20 BYTE),
+Nationality VARCHAR2(20 BYTE)
+);
+
+create sequence DWtemps_seq; declare cursor c_temps is
+select tempid, town, county, postcode, gender, Age, nationality from stag_temp;
+begin
+for c_rec in c_temps loop
+insert into DW_Temp_Dim values(
+DWtemps_seq.NEXTVAL, c_rec.tempid, c_rec.town, c_rec.county, c_rec.postcode, c_rec.gender, c_rec.Age, c_rec.nationality
+);
+end loop; end;
+
+CREATE TABLE DW_local_council_Dim ( surr_LocalCouncil_ID			INT primary key, LocalCouncil_ID		VARCHAR2(20 BYTE), LocalCouncilName	VARCHAR2(255 BYTE), AddressLine1	VARCHAR2(50 BYTE), AddressLine2		VARCHAR2(50 BYTE),
+Town	VARCHAR2(20 BYTE),
+County	VARCHAR2(12 BYTE),
+Postcode	VARCHAR2(9 BYTE),
+Telephone	VARCHAR2(14 BYTE)
+);
+
+create sequence councils_seq; declare
+cursor c_localcouncils is select localcouncil_id,
+localcouncilname,addressline1,addressline2,town,county,postcode,telephone from stag_local_council;
+begin
+for c_rec in c_localcouncils loop
+insert into DW_local_council_Dim values( councils_seq.nextval, c_rec.localcouncil_id,
+c_rec.localcouncilname,c_rec.addressline1,c_rec.addressline2,c_rec.town,c_rec.county,c_rec. postcode,c_rec.telephone
+);
+end loop; end;
+
+CREATE TABLE DW_Date_Dim( DW_Date_ID		number(6) primary key, SessionDate	DATE,
+dw_Day	number(2), dw_DAY_NAME		varchar2(20), DW_MONTH_NUMBER	number(2), dw_MONTH	varchar2(20),
+dw_YEAR	number(4), WEEK_OF_YEAR		number(2)
+);
+
+CREATE TABLE DW_SessionsFact(
+SessionID	VARCHAR2(20 BYTE),
+surr_RequestID	VARCHAR2(20 BYTE) not null, surr_TempID	VARCHAR2(20 BYTE) not null, TypeofCoverID_surr VARCHAR2(20 BYTE) not null, DW_Date_id		number(6) NOT NULL, surr_localcouncil_id	VARCHAR2(20 BYTE), SessionStart	TIMESTAMP,
+SessionEnd	TIMESTAMP,
+Status	VARCHAR2(20 BYTE)
+);
+
+alter table dw_sessionsfact
+add foreign key (surr_requestid) references dw_temp_request_dim (surr_requestid)
+alter table dw_sessionsfact
+add foreign key (surr_tempid) references dw_temp_dim (surr_tempid)
+alter table dw_sessionsfact
+add foreign key (surr_localcouncil_id) references dw_local_council_dim (surr_localcouncil_id)
+alter table dw_sessionsfact
+add foreign key (typeofcoverid_surr) references dw_type_of_temp_cover_dim (typeofcoverid_surr)
+
+alter table dw_sessionsfact
+add foreign key (dw_date_id) references dw_date_dim (dw_date_id)
+
+Loading FACT & Time table;
+The cursor used to load the fact and time table are as follows:
+create sequence sessionsfact_seq; declare
+new_date_id number (6); date_count number(2); cursor c_sessionsfact is
+select tr.surr_requestid, t.surr_tempid, lcd.surr_localcouncil_id, c.typeofcoverid_surr, s.sessionid, s.sessionstart, s.sessionend, s.status, s.sessiondate
+from stag_session S
+inner join dw_temp_request_dim r on r.requestid = s.requestid inner join dw_temp_request_dim tr on r.requestid = tr.requestid
+inner join dw_local_council_dim lcd on lcd.localcouncil_id = r.localcouncil_id inner join dw_temp_dim t on s.tempid = t.tempid
+inner join dw_type_of_temp_cover_dim c on c.typeofcoverid = s.typeofcoverid; begin
+for c_rec in c_sessionsfact loop date_count:=0;
+select count(*) into date_count from dw_date_dim where LOWER(TRIM(sessiondate)) = LOWER(TRIM(c_rec.sessiondate));
+if(date_count = 0)then
+new_date_id := sessionsfact_seq.nextval(); insert into dw_date_dim values (
+new_date_id, c_rec.sessiondate, to_char(c_rec.sessiondate,'dd'), to_char(c_rec.sessiondate,'dy'), to_char(c_rec.sessiondate,'MM'), to_char(c_rec.sessiondate,'Month'), to_char(c_rec.sessiondate,'YYYY'), to_char(c_rec.sessiondate,'WW'));
+else
+select dw_date_id into new_date_id from dw_date_dim where LOWER(TRIM(sessiondate)) = LOWER(TRIM(c_rec.sessiondate));
+end if;
+insert into dw_sessionsfact values (
+ 
+c_rec.sessionid, c_rec.surr_requestid, c_rec.surr_tempid, c_rec.typeofcoverid_surr, new_date_id, c_rec.surr_localcouncil_id, c_rec.sessionstart, c_rec.sessionend, c_rec.status);
+end loop; end;
+
