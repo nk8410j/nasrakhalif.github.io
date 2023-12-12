@@ -1,0 +1,222 @@
+This is the plan of cleaning data
+1.	Create new tables: creating new tables, removing the misspelling in some/the attributes and adding primary keys; also, add user-defined name foreign keys where necessary
+2.	Populate tables from ODS tables: ensuring that are not duplicate in the data, ensuring that every row is unique
+3.	Cleanse each of the tables: clean the table utilizing cursors and few SQL statements
+
+### Creating Tables
+
+CREATE TABLE stg_careprovider_computer_system( 
+ComputerSystemID INT NOT NULL PRIMARY KEY, 
+ComputerSystemDescription VARCHAR(50) NOT NULL);
+
+Remove the spaces in the attributes within the address, address line1, and 2 Approximate List Size,
+Type of Computer System, Computer Used in Consultations, Appointment System and Date of Last Update attributes,
+remove the spaces. Remove the # signs from telephone, fax and Bypass.
+
+CREATE TABLE STAG_Local_Council( LocalCouncil_ID INT NOT NULL PRIMARY KEY, 
+LocalCouncilName VARCHAR2(255), 
+AddressLine1 VARCHAR2(50),
+AddressLine2 VARCHAR2(50), 
+Town VARCHAR2(20),
+County VARCHAR2(10),
+Postcode VARCHAR2(9), 
+Locality VARCHAR2(12), 
+Telephone VARCHAR2(14),
+Fax VARCHAR2(14), 
+Bypass VARCHAR2(14),
+ApproximateListSize VARCHAR2(5), 
+TypeofComputerSystem INT, 
+ComputerUsedinConsultations INT, 
+AppointmentSystem INT,
+Leaflets VARCHAR2(5), 
+DateofLastUpdate DATE, 
+TypeofLocalCouncil VARCHAR2(10));
+
+
+CONSTRAINT fk_comput FOREIGN KEY (TypeofComputerSystem) 
+REFERENCES stag_careprovider_computer_system (ComputerSystemID) );
+
+CREATE TABLE STAG_Temp_Nationality( NationalityID INT NOT NULL PRIMARY KEY,
+NationalityDescription VARCHAR(20)); 
+
+CREATE TABLE STAG_Type_of_Temp_Cover( TypeofCoverID INT NOT NULL PRIMARY KEY,
+CoverDescription VARCHAR(30)); 
+
+CREATE TABLE STAG_TempCurrentStatus( CurrentStatusID INT NOT NULL PRIMARY KEY, 
+CurrentStatusDescription VARCHAR2(255));
+
+CREATE TABLE STAG_TempRegistrationStatus( LocumRegistrationStatusID INT NOT NULL PRIMARY KEY 
+LocumRegistrationStatusDescription VARCHAR2(255));
+
+CREATE TABLE STAG_TempGender( genderID INT NOT NULL PRIMARY KEY,
+GenderDescription VARCHAR2(15));
+
+CREATE TABLE STAG_TempStatus( TempStatusID INT NOT NULL PRIMARY KEY,
+TempStatusDescription VARCHAR2(255));
+
+CREATE TABLE STAG_Temp(
+TempID INT NOT NULL PRIMARY KEY,
+Title INT,
+FirstName VARCHAR2(255), 
+LastName VARCHAR2(255),
+AddressLine1 VARCHAR2(255), 
+AddressLine2 VARCHAR2(255), 
+Town VARCHAR2(255),
+County VARCHAR2(255),
+Postcode VARCHAR2(255), 
+Telephone VARCHAR2(255), 
+FaxHome VARCHAR2(255),
+TelWork VARCHAR2(255), 
+FaxWork VARCHAR2(255),
+MobilePhone VARCHAR2(255),
+Date_application_was_sent DATE, 
+Gender INT,
+CurrentStatus INT, 
+CurrentStatus INT, 
+Date_of_birth VARCHAR2(30), 
+Nationality INT,
+Use_of_a_car VARCHAR2(50), 
+QualificationYear VARCHAR2(255), 
+QualificationPlace VARCHAR2(255),
+Type_of_Cover_Preferred INT, 
+"Monday AM" INT,
+"Monday PM" INT,
+"Tuesday AM" INT, 
+"Tuesday PM" INT,
+"Wednesday AM" INT, 
+"Wednesday PM" INT, 
+"Thursday AM" INT,
+"Thursday PM" INT, 
+"Friday AM" INT, 
+"Friday PM" INT, 
+"Saturday AM" INT,
+TempRegistrationStatus INT, 
+Date_application_received VARCHAR2(50), 
+TempStatus INT );
+
+drop table STAG_temp CASCADE constraints;
+
+ALTER TABLE STAG_Temp ADD CONSTRAINT fk_titemp2 FOREIGN KEY (Title)
+REFERENCES STAG_Employee_Title(TitleID);
+ALTER TABLE STAG_Temp ADD CONSTRAINT fk_gender FOREIGN KEY (gender) REFERENCES STAG_TempGender(genderID);
+ALTER TABLE STAG_Temp ADD CONSTRAINT fk_nat FOREIGN KEY (Nationality) REFERENCES STAG_Temp_Nationality(NationalityID);
+ALTER TABLE STAG_Temp ADD CONSTRAINT fk_cover FOREIGN KEY
+(Type_of_Cover_Preferred) REFERENCES STAG_Type_of_Temp_cover(TypeofcoverID);
+ALTER TABLE STAG_Temp ADD CONSTRAINT fk_curr FOREIGN KEY (TempStatus) REFERENCES STAG_TempStatus(TempStatusID);
+ALTER TABLE STAG_Temp ADD CONSTRAINT fk_status FOREIGN KEY (CurrentStatus) REFERENCES STAG_TempCurrentStatus(CurrentStatusID);
+ALTER TABLE STAG_Temp ADD CONSTRAINT fk_reg FOREIGN KEY
+(TempRegistrationStatus) REFERENCES STAG_TempRegistrationStatus(LocumRegistrationStatusID);
+
+STAG_Temp_request
+CREATE TABLE STAG_Temp_request( TempRequestID INT NOT NULL PRIMARY KEY,
+LocalCouncil_ID INT NOT NULL, RequestDate DATE NOT NULL, StartDate DATE,
+EndDate DATE,
+"Monday AM" INT, "Monday PM" INT, "Tuesday AM" INT, "Tuesday PM" INT, "Wednesday AM" INT, "Wednesday PM" INT, "Thursday AM" INT, "Thursday PM" INT, "Friday AM" INT, "Friday PM" INT, "Saturday AM" INT,
+RequestStatus VARCHAR(10), Number_of_weeks VARCHAR(10), "Comment" CLOB,
+CONSTRAINT fk_counreq FOREIGN KEY (LocalCouncil_ID) REFERENCES STAG_Local_Council(LocalCouncil_ID));
+
+CREATE TABLE STAG_Session(
+SessionID INT NOT NULL PRIMARY KEY,
+RequestID INT, TempID INT,
+SessionDate DATE NOT NULL, SessionStart DATE,
+SessionEnd DATE, Status VARCHAR2(50), "Type" NUMBER(2),
+EmployeeCovered INT, DoPrint VARCHAR2(5),
+CONSTRAINT fk_tempreq FOREIGN KEY (RequestID) REFERENCES STAG_Temp_request(TempRequestID),
+CONSTRAINT fk_temp FOREIGN KEY (TempID) REFERENCES STAG_Temp(TempID),
+CONSTRAINT fk_empcover FOREIGN KEY (EmployeeCovered) REFERENCES STAG_Employee_Details(Employee_ID));
+
+
+### Populating tables
+
+INSERT INTO stag_careprovider_computer_system(ComputerSystemID, ComputerSystemDescription)
+SELECT DISTINCT "ComputerSystemID", "ComputerSystemDescription" FROM ods_careprovider_computer_system;
+
+INSERT INTO stag_local_council(LocalCouncil_ID, LocalCouncilName, AddressLine1, AddressLine2, Town, Locality, Telephone,
+Fax, Bypass, ApproximateListSize, TypeofComputerSystem, ComputerUsedinConsultations, AppointmentSystem, Leaflets, DateofLastUpdate, TypeofLocalCouncil)
+SELECT DISTINCT "LocalCouncil_ID", "LocalCouncilName", "Address Line 1", "Address Line 2", "Town", "Locality", "Telephone#",
+"Fax", "Bypass", "Approximate List Size", "Type of Computer System", "Computer Used in Consultations", "Appointment System", "Leaflets", "Date of Last Update", "TypeofLocalCouncil"
+FROM ods_local_council;
+
+INSERT INTO STAG_Temp_Nationality(NationalityID, NationalityDescription) 
+SELECT DISTINCT "NationalityID", "NationalityDescription" 
+FROM ods_Temp_Nationality;
+
+INSERT INTO STAG_Type_of_Temp_Cover(TypeofCoverID, CoverDescription) 
+SELECT DISTINCT "TypeofCoverID", "CoverDescription" 
+FROM ods_Type_of_Temp_Cover;
+
+INSERT INTO STAG_TempCurrentStatus(CurrentStatusID, CurrentStatusDescription)
+SELECT DISTINCT "CurrentStatusID", "CurrentStatusDescription" 
+FROM "ODS_TempCurrent Status";
+
+INSERT INTO STAG_TempRegistrationStatus(LocumRegistrationStatusID, LocumRegistrationStatusDescription)
+SELECT DISTINCT "LocumRegistrationStatusID", "LocumRegistrationStatusDescription" 
+FROM "ODS_TempRegistrationStatus";
+
+INSERT INTO STAG_TempGender(genderID, GenderDescription)
+SELECT DISTINCT "GenderID", "GenderDescription" 
+FROM "ODS_TempGender";
+
+INSERT INTO STAG_TempStatus(TempStatusID, TempStatusDescription) 
+SELECT DISTINCT "TempStatusID", "TempStatusDescription" 
+FROM "ODS_TempStatus";
+
+INSERT INTO STAG_Temp(TempID, Title, FirstName, LastName, AddressLine1, AddressLine2, Town, County, Postcode, Telephone, Fax#Home, Tel#Work,
+Fax#Work, MobilePhone, Date_application_was_sent, Gender, CurrentStatus, Date_of_birth, Nationality, Use_of_a_car, QualificationYear,
+QualificationPlace, Type_of_Cover_Preferred, "Monday AM", "Monday PM", "Tuesday AM", "Tuesday PM","Wednesday AM", "Wednesday PM",
+"Thursday AM", "Thursday PM", "Friday AM", "Friday PM", "Saturday AM", TempRegistrationStatus, Date_application_received, TempStatus)
+SELECT DISTINCT "TempID", "Title", "First Name", "Last Name", "Address Line 4", "Address Line 2", "Town", "County", "Postcode", "Tel#6ome", "Fax#Home", "Tel#Work",
+"Fax#Work", "Mobile Phone#", "Date application was sent", "Gender", "Current Status", "Date of birth", "Nationality", "Use of a car", "Qualification Year",
+"Qualification Place", "Type of Cover Preferred", "Monday AM", "Monday PM", "Tuesday AM", "Tuesday PM","Wednesday AM", "Wednesday PM",
+"Thursday AM", "Thursday PM", "Friday AM", "Friday PM", "Saturday AM", "Temp Registration Status", "Date application received", "TempStatus"
+FROM "ODS_TEMP";
+
+INSERT INTO STAG_Temp_request(TempRequestID, LocalCouncil_ID, RequestDate, StartDate, EndDate, "Monday AM", "Monday PM", "Tuesday AM", "Tuesday PM",
+"Wednesday AM", "Wednesday PM", "Thursday AM", "Thursday PM", "Friday AM", "Friday PM", "Saturday AM", RequestStatus, Number_of_weeks, "Comment")
+SELECT DISTINCT "TempRequestID", "LocalCouncil_ID", "Request date", "Start date", "End date", "Monday AM", "Monday PM", "Tuesday AM", "Tuesday PM",
+"Wednesday AM", "Wednesday PM", "Thursday AM", "Thursday PM", "Friday AM", "Friday PM", "Saturday AM", "Request Status", "Number of weeks", "Comments"
+FROM "ODS_TEMP_REQUEST";
+
+#### Cleaning the Data
+
+select * from stag_careprovider_computer_system order by computersystemid;
+
+UPDATE stag_careprovider_computer_system set computersystemdescription = 'Not provided' 
+WHERE computersystemid = 4;
+
+INSERT INTO stag_careprovider_computer_system VALUES(0, 'Not Applicable');
+
+fetch c_council_cursor2 INTO V_COUNC_id, v_date;
+exit when c_council_cursor2%NOTFOUND;
+
+if v_date is null then
+  select nvl(to_char(null, 'DD-MM-YYYY',sysdate) INTO v_date from dual;
+  update stag_local_council  
+  SET dateoflastupdate = v_date
+  where current of c_council_cursor2;
+end if;
+if v_dob is null 
+
+UPDATE stag_LOCAL_COUNCIL
+set LocalCouncilName = 'Bromley' where LocalCouncil_ID =6;
+
+UPDATE stag_LOCAL_COUNCIL
+set LocalCouncilName = 'Bromley' where LocalCouncil_ID = 58;
+
+UPDATE stag_LOCAL_COUNCIL
+set LocalCouncilName = 'Orpington' where LocalCouncil_ID = 59;
+
+DELETE stag_temp_nationality
+WHERE nationalityid = 14;
+
+ 
+DELETE stag_temp_nationality WHERE nationalityid = 15;
+
+UPDATE stag_temp_nationality
+SET nationalitydescription = 'Not Provided WHERE nationalityid = 7;
+
+
+
+
+
+
