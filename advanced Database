@@ -1,0 +1,55 @@
+1.	Create new permanent tablespace qs_tsp, size 70Mb to store extra inventory information. 
+Space management within this tablespace should be locally managed and automatically extendable by 10Mb
+to a maximum size 120Mb.  
+
+Create tablespace qs_tsp
+Datafile ‘/u01/app/oracle/oradata/NK8410J/qs_tsp01.dbf’
+Size 70M
+Autoextend on next 10M maxsize 120M
+Extent management local
+Segment space management auto
+Flashback on
+
+First create a username/generic password;
+Create user zhassan identified by oracle
+Default tablespace ‘qs_tsp’
+Temporary tablespace ‘temp’;
+
+Create user Pkhan identified by oracle
+Default tablespace ‘qs_tsp’
+Temporary tablespace ‘temp’;
+
+Create user TJames identified by oracle
+Default tablespace ‘qs_tsp’
+Temporary tablespace ‘temp’;
+
+Create role
+Tsp_customer_service
+Tsp_inventory_department
+
+Create a profile;
+Create profile tsp_prof limit
+Password_verify_function verify_function_11g
+Password_life_time 180
+Password_grace_time 0
+Password_reuse_time unlimited
+Password_reuse_max 1
+Failed_login_attempts 3
+Password_lock_time 1.25
+idle_time 15;
+Alter user to assign profile and expire password after first logon:
+Alter user zhassan profile ar_prof password expire;
+Alter user Pkhan profile ar_prof password expire;
+Alter user TJames profile ar_prof password expire;
+
+Create tables inv_categories (
+Cat_id number(4) constraint cat_null not null,
+Sub_cat_id number(4) constraint sub_null not null,
+Cat_name varchare2(25) cat_name_null not null,
+Sub_cat_name varchar(25) sub_cat_null not null,
+Cat_description varchar2(50) cat_desc_null not null,
+Available char(1),
+Constraint inv_prky primary key (cat_id, sub_cat_id),
+Constraint avail check (available = ‘Y’ or ‘N’)
+
+
