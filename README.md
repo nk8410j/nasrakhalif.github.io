@@ -33,7 +33,7 @@
 *  Conducted performance tests on CMS-Grid machines with the OpenMP implementation.
 *  Improved the parallel performance using different OpenMP directives and clauses.
 
-### [PROJECT 5: Sentiment Analysis for predicting Stock Price Behaviour](https://github.com/nk8410j/nasrakhalif.github.io)
+### [PROJECT 5: Big Data: Timeseries Stock Price Forecasting](https://github.com/nk8410j/nasrakhalif.github.io)
 
 * Analyzed stock prices and aimed to create an accurate predictive model for future stock trends.
 Utilized Apache Spark to transform a dataset that included tweets and processed stock prices in Jupyter notebook.
