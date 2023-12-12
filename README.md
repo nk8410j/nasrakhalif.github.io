@@ -35,8 +35,8 @@
 
 ### [PROJECT 5: Sentiment Analysis for predicting Stock Price Behaviour](https://github.com/nk8410j/nasrakhalif.github.io)
 
-* Web scraping data from Twitter API and stored data in Neo4j)
-* designed a graph data schema that illustrates the database model
-* Used Natural Language Processing tasks such as speech tagging, Entity Extraction and Sentiment analysis
-* connected the Neo4j database to Tableu to visualise, and compare stock prices and sentiments
+* Analyzed stock prices and aimed to create an accurate predictive model for future stock trends.
+Utilized Apache Spark to transform a dataset that included tweets and processed stock prices in Jupyter notebook.
+*  Evaluated predictive models including ARIMA, SVR, and LSTM.
+*  Concluded that the LSTM model demonstrated high accuracy in predicting stock prices.
 ![](https://github.com/nk8410j/nasrakhalif.github.io/blob/main/images/graphs%20of%20apple%20closing%20price.png)
