@@ -24,7 +24,6 @@
 *  Found that the Random Forest Regression model produced more accurate predictions. 
 *  Created a Tableau dashboard to display a summarized overview of the data, providing an accessible and visually engaging representation of key insights.
 
-![image](https://github.com/nk8410j/nasrakhalif.github.io/assets/61120734/3bc228cf-55c4-4860-930c-393f08bd7bd0)
 ![](https://github.com/nk8410j/nasrakhalif.github.io/blob/main/images/Dashboard%20of%20Airbnb.png)
 
 ### [PROJECT 4: Cloud and Virtualisation](https://github.com/nk8410j/nasrakhalif.github.io)
