@@ -1,6 +1,6 @@
 # Data Analyst
 
-### Skills: Python, SQL, AWS, Tableau, Excel, Power BI, Matplotlib, Seaborn, Numpy, Data cleaning
+### Skills: Python, SQL, Tableau, Excel, Power BI, Matplotlib, Seaborn, Numpy, Data Cleaning
 
 ### [PROJECT 1: Data Warehousing](https://github.com/nk8410j/nasrakhalif.github.io)
 *  Extracted data by establishing an ODBC connection and exporting it to Oracle
@@ -23,7 +23,6 @@
 *  Machine learning algorithms such as Random Forest Regression, Support Vector Machine Regression (SVR), Polynomial Regression and Linear Regression used to predict accurate pricing based on selected features.
 *  Found that the Random Forest Regression model produced more accurate predictions. 
 *  Created a Tableau dashboard to display a summarized overview of the data, providing an accessible and visually engaging representation of key insights.
-
 ![](https://github.com/nk8410j/nasrakhalif.github.io/blob/main/images/Dashboard%20of%20Airbnb.png)
 
 ### [PROJECT 4: Cloud and Virtualisation](https://github.com/nk8410j/nasrakhalif.github.io)
