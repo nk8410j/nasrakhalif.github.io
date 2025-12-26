@@ -1,4 +1,4 @@
-# Data Analyst
+# Data Enineer
 
 ### Skills: Python, SQL, Tableau, Excel, Power BI, Matplotlib, Seaborn, Numpy, Data Cleaning
 
